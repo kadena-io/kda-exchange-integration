@@ -1,13 +1,13 @@
 //------------------------------------------------------------------------------------------------------------------------
 //                  NETWORK HELPERS
 //------------------------------------------------------------------------------------------------------------------------
-export const isHexadecimal = (str) => {
+const isHexadecimal = (str) => {
   const regexp = /^[0-9a-fA-F]+$/;
   if (regexp.test(str)) return true;
   else return false;
 };
 
-export const checkKey = (key) => {
+const checkKey = (key) => {
   try {
     if (key.length !== 64) {
       return false;
@@ -21,7 +21,12 @@ export const checkKey = (key) => {
   }
 };
 
-export const formatAmount = (amount) => {
+const formatAmount = (amount) => {
   //allowing max of 4 decimal places
-  return (Math.floor(amount * 1e4) / 1e4).toFixed(4);
+  return (Math.floor(amount * 1e8) / 1e8).toFixed(8);
 };
+
+module.exports = {
+  checkKey,
+  formatAmount
+}

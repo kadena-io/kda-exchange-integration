@@ -1,10 +1,9 @@
-import {
+var {
   checkKey,
-  formatAmount,
-  sleepPromise
-} from './helpers.js'
+  formatAmount
+} = require('./format-helpers.js')
 
-export const getAcctDetails = async (
+const getAcctDetails = async (
     acct,
     chainId
 ) => {
@@ -30,17 +29,6 @@ export const getAcctDetails = async (
   }
 }
 
-const transfer = async (
-  fromAcct,
-  toAcct,
-  amount,
-  chainId,
-  guard
-) => {
-  try {
-    
-  } catch (e) {
-    console.log(e);
-    return "CANNOT PROCESS TRANSFER: network error"
-  }
+module.exports = {
+  getAcctDetails
 }
