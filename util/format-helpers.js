@@ -22,7 +22,7 @@ const checkKey = (key) => {
 };
 
 const formatAmount = (amount) => {
-  //allowing max of 4 decimal places
+  //allowing max of 8 decimal places
   return (Math.floor(amount * 1e8) / 1e8).toFixed(8);
 };
 

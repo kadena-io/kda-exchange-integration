@@ -19,15 +19,36 @@ const pollTxRes = async (reqKey, host) => {
       time = 0;
     }
   }
-  console.log(pollRes[reqKey])
-  if (pollRes[reqKey].result.status === 'success') {
-    return true
-  } else {
-    return false
-  }
+  return pollRes[reqKey]
+  // console.log(pollRes[reqKey])
+  // if (pollRes[reqKey].result.status === 'success') {
+  //   return true
+  // } else {
+  //   return false
+  // }
 }
+
+const makePactContCommand = (
+  chainId,
+  pactId,
+  proof,
+  step,
+  meta,
+  networkId,
+  rollback = false
+) => ({
+  type: "cont",
+  keyPairs: [],
+  meta,
+  step,
+  rollback,
+  pactId,
+  proof,
+  networkId,
+});
 
 module.exports = {
   sleepPromise,
-  pollTxRes
+  pollTxRes,
+  makePactContCommand
 }
