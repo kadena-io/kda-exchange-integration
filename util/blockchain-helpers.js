@@ -7,16 +7,24 @@ const sleepPromise = async (timeout) => {
 }
 
 const pollTxRes = async (reqKey, host) => {
-  //check kadena tx status every 5 seconds until we get a response (success or fail)
-  var time = 480;
+  //check kadena tx status until we get a response (success or fail) or 400
+  //seconds has gone by
+  var timeLimit = 480;
+  var sleepTime = 5;
   var pollRes;
-  while (time > 0) {
-    await sleepPromise(5000);
+  while (timeLimit > 0) {
+    await sleepPromise(sleepTime * 1000);
+
     pollRes = await Pact.fetch.poll({requestKeys: [reqKey]}, host);
     if (Object.keys(pollRes).length === 0) {
-      time = time - 5
+      timeLimit = timeLimit - sleepTime;
     } else {
-      time = 0;
+      timeLimit = 0;
+    }
+
+    // exponential backoff to reduce server load
+    if (sleepTime < 30) {
+      sleepTime = sleepTime * 2;
     }
   }
   return pollRes[reqKey]
