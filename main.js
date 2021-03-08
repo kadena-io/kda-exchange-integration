@@ -52,6 +52,10 @@ const processWithdraw = async (
         //toAcct does not yet exist
         if (checkKey(toAcct)) {
           //toAcct does not exist, but is a valid address
+
+          // NOTE An exchange might want to ask the user to confirm that they
+          // own the private key corresponding to this public key.
+
           //send to this
           const res = await transfer(tokenAddress, PUB_KEY, toAcct, amount, chainId, {"pred":"keys-all","keys":[toAcct]})
           return res

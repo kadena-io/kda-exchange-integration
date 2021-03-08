@@ -1,6 +1,6 @@
 # Kadena Example Implementation for Exchanges
 
-Easily integrate an exchange backend to Kadena's blokchain ecosystem
+Easily integrate an exchange backend to Kadena's blockhain ecosystem
 
 ## Assumptions
 
