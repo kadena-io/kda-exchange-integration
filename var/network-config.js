@@ -1,10 +1,15 @@
 //------------------------------------------------------------------------------------------------------------------------
 //                  NETWORK CONSTS
 //------------------------------------------------------------------------------------------------------------------------
+
+//UNCOMMENT TWO CONSTS
 // const NETWORK_ID = 'mainnet01';
 // const SERVER = 'api.chainweb.com';
+//COMMENT OUT FOR MAINNET
 const NETWORK_ID = 'testnet04';
 const SERVER = 'api.testnet.chainweb.com';
+//
+//
 const TTL = 28800;
 const GAS_PRICE = 0.0000000001;
 const GAS_LIMIT = 10000;
