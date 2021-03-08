@@ -2,9 +2,10 @@
 //                  NETWORK CONSTS
 //------------------------------------------------------------------------------------------------------------------------
 
-//UNCOMMENT TWO CONSTS
+//UNCOMMENT TWO CONSTS FOR MAINNET
 // const NETWORK_ID = 'mainnet01';
 // const SERVER = 'api.chainweb.com';
+
 //COMMENT OUT FOR MAINNET
 const NETWORK_ID = 'testnet04';
 const SERVER = 'api.testnet.chainweb.com';
