@@ -28,12 +28,6 @@ const pollTxRes = async (reqKey, host) => {
     }
   }
   return pollRes[reqKey]
-  // console.log(pollRes[reqKey])
-  // if (pollRes[reqKey].result.status === 'success') {
-  //   return true
-  // } else {
-  //   return false
-  // }
 }
 
 const makePactContCommand = (

@@ -17,3 +17,20 @@ Easily integrate an exchange backend to Kadena's blockhain ecosystem
 2. follow the example to run `processWithdraw()` from `main.js`
 
 3. toggle testnet/mainnet and general network settings go to `var/network-config.js`
+
+## Features
+
+- `/util` dir
+  - `pact-lang-api.js` is javascript implementation for interacting with Kadena blockchain. Note it is also an [npm package](https://www.npmjs.com/package/pact-lang-api) that you can check for future updates
+  - `blockchain-write.js` are function calls that write new data to the blockchain using the `/send` endpoint of a `chainweb-node`
+  - `blockchain-read.js` are function calls that read data from the blockchain using the `/local` endpoint of a `chainweb-node`
+    - you can use `getAcctDetails()` to fetch the balance for any account, including your own
+- `/var` dir
+  - `network-config.js` has all the relevant network settings to talk to the `chainweb-node` endpoints. Covers basic blockchain setup, such as specified metadata and target network
+    - toggle here for app to talk to mainnet
+  - `keys.js` contains a public and private key with few TESTNET funds
+    - toggle here for own keypair
+    - PLEASE KEEP SAFE
+- `main.js` has a sample withdraw function implementation. If the sending account does not have enough funds on the target chain, `balanceFunds()` from `/util/blockchain-write.js` will be called to fund own account on the given chain.
+  - Cross-chain transfers are always performed on own account to ensure user will always receive funds without having to pay for gas on the target chain
+  - This assumes you have enough money to cover the withdraw spread out on other chains
