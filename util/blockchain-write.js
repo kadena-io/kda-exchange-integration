@@ -47,7 +47,7 @@ const transfer = async (
           clist: [
             //capability to transfer
             {
-              name: "coin.TRANSFER",
+              name: `${tokenAddress}.TRANSFER`,
               args: [fromAcct, toAcct, +formatAmount(amount)]
             },
             //capability for gas
