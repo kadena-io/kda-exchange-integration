@@ -65,9 +65,7 @@ const transfer = async (
       host(chainId)
     )
     const reqKey = res.requestKeys[0]
-    console.log(reqKey)
     const pollRes = await pollTxRes(reqKey, host(chainId));
-    console.log(pollRes)
     if (pollRes.result.status === 'success') {
       return `TRANSFER SUCCESS: from ${fromAcct} to ${toAcct} for ${amount} ${tokenAddress} on chain ${chainId}`
     } else {
@@ -106,9 +104,7 @@ const transferCrossChainSameAccount = async (
       host(fromChain)
     )
     const reqKey = burn.requestKeys[0]
-    console.log(reqKey)
     const pollRes = await pollTxRes(reqKey, host(fromChain));
-    console.log(pollRes)
     if (pollRes.result.status === 'success') {
       const pactId = pollRes.continuation.pactId;
       const targetChainId = pollRes.continuation.yield.provenance.targetChainId;
@@ -128,9 +124,7 @@ const transferCrossChainSameAccount = async (
       const continuationCommand = makePactContCommand(toChain, reqKey, proof, 1, meta, NETWORK_ID);
       const mint = await Pact.fetch.send(continuationCommand, host(toChain))
       const mintReqKey = mint.requestKeys[0]
-      console.log(mintReqKey);
       const mintPollRes = await pollTxRes(mintReqKey, host(toChain));
-      console.log(mintPollRes)
       if (mintPollRes.result.status === 'success') {
         return `CROSS-CHAIN TRANSFER SUCCESS: ${amount} ${tokenAddress} transfered from chain ${fromChain} to ${toChain} for account ${account}`
       } else {
