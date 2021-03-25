@@ -7,13 +7,13 @@ const sleepPromise = async (timeout) => {
 }
 
 const pollTxRes = async (reqKey, host) => {
-  //check kadena tx status until we get a response (success or fail) or 400
-  //seconds has gone by
+  //check kadena tx status until we get a response (success or fail
+  //  or 480 seconds has gone by
   var timeLimit = 480;
   var sleepTime = 5;
   var pollRes;
   while (timeLimit > 0) {
-    await sleepPromise(sleepTime * 1000);
+    if (timeLimit !== 480) await sleepPromise(sleepTime * 1000);
 
     pollRes = await Pact.fetch.poll({requestKeys: [reqKey]}, host);
     if (Object.keys(pollRes).length === 0) {
@@ -27,7 +27,16 @@ const pollTxRes = async (reqKey, host) => {
       sleepTime = sleepTime * 2;
     }
   }
-  return pollRes[reqKey]
+  if (pollRes[reqKey]) {
+    return pollRes[reqKey]
+  } else {
+    return "POLL FAILED: Please try again. Note that the transaction specified may not exist on target chain"
+  }
+
+}
+
+const getPubFromPriv = (pubKey) => {
+  return Pact.crypto.restoreKeyPairFromSecretKey(pubKey).publicKey
 }
 
 const makePactContCommand = (
@@ -52,5 +61,6 @@ const makePactContCommand = (
 module.exports = {
   sleepPromise,
   pollTxRes,
-  makePactContCommand
+  makePactContCommand,
+  getPubFromPriv
 }

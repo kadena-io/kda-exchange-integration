@@ -12,7 +12,8 @@ var {
   checkKey,
 } = require('../util/format-helpers.js')
 var {
-  pollTxRes
+  pollTxRes,
+  getPubFromPriv
 } = require('../util/blockchain-helpers.js')
 var {
   PUB_KEY,
@@ -20,18 +21,25 @@ var {
 } = require('../var/keys.js')
 
 
-//NOTE: to maintain safety of funds, please ensure the address is created on ALL 20 CHAINS
-//      this is a necessary precauction as people may 'squat' on accounts
-
-//create a single kadena address on all 20 chains
-//  will fail if if does not succeed on all chains
+/**
+ * Creates an address for a given public key
+ ** NOTE: to maintain safety of funds, please ensure the address is created on ALL 20 CHAINS
+ ***      this is a necessary precauction as people may 'squat' on accounts
+ * @param tokenAddress {string} - this is the address of the token kda token is 'coin'
+ *                                  an abritrary token example is 'runonflux.flux' for flux token deployed on our network
+ * @param publicKey {string} - public key address of account you would like to create
+ * @return {string} success or failure with message
+**/
 const createAddress = async (
   tokenAddress,
-  publicKey
+  publicKey,
+  signingAccount,
+  signingPrivKey
 ) => {
   if (!checkKey(publicKey)) {
     return "CREATE ADDRESS FAILED: invalid public key format"
   } else {
+      const signingPubKey = getPubFromPriv(signingPrivKey);
       try {
         const pactCode = `(${tokenAddress}.create-account ${JSON.stringify(publicKey)} (read-keyset "ks"))`
         const reqKeys = {};
@@ -48,8 +56,8 @@ const createAddress = async (
                 //YOU CAN CONSIDER USING AN ACCOUNT WITH VERY FEW FUNDS IN IT
                 //  an account with 1kda will create over a million addresses!
                 //MUST HAVE FUNDS ON ALL CHAINS
-                publicKey: PUB_KEY,
-                secretKey: PRIV_KEY,
+                publicKey: signingPubKey,
+                secretKey: signingPrivKey,
                 clist: [
                   //capability for gas
                   {
@@ -58,7 +66,7 @@ const createAddress = async (
                   }
                 ]
               }],
-              meta: Pact.lang.mkMeta(PUB_KEY, chainId, GAS_PRICE, GAS_LIMIT, creationTime(), TTL),
+              meta: Pact.lang.mkMeta(signingAccount, chainId, GAS_PRICE, GAS_LIMIT, creationTime(), TTL),
               envData: {
                 "ks": {
                   "pred": "keys-all",
@@ -96,4 +104,4 @@ const createAddress = async (
 }
 
 //EXAMPLE CALL
-// createAddress('coin', '092a219fea5c47ddfdecd6b8414b115b5c8f325e897c271dd77a493c3d0a636f');
+createAddress('coin', 'c728dea18156e7b2e63b2bc7b45779b57dadc78457bbbf2f8cd446a0122159e0', PUB_KEY, PRIV_KEY);

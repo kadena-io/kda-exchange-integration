@@ -9,16 +9,13 @@ var {
   host
 } = require('../var/network-config.js')
 var {
-  PUB_KEY,
-  PRIV_KEY
-} = require('../var/keys.js')
-var {
   getAcctDetails
 } = require('./blockchain-read.js')
 var {
   pollTxRes,
   sleepPromise,
-  makePactContCommand
+  makePactContCommand,
+  getPubFromPriv
 } = require('./blockchain-helpers.js')
 var {
   checkKey,
@@ -29,12 +26,14 @@ var {
 const transfer = async (
   tokenAddress,
   fromAcct,
+  fromAcctPrivKey,
   toAcct,
   amount,
   chainId,
   guard
 ) => {
   try {
+    const fromAcctPubKey = getPubFromPriv(fromAcctPrivKey);
     const res = await Pact.fetch.send(
       {
         pactCode: `(${tokenAddress}.transfer-create ${JSON.stringify(fromAcct)} ${JSON.stringify(toAcct)} (read-keyset "recp-ks") ${formatAmount(amount)})`,
@@ -42,8 +41,8 @@ const transfer = async (
         keyPairs: [{
           //EXCHANGE ACCOUNT KEYS
           //  PLEASE KEEP SAFE
-          publicKey: PUB_KEY,
-          secretKey: PRIV_KEY,
+          publicKey: fromAcctPubKey,
+          secretKey: fromAcctPrivKey,
           clist: [
             //capability to transfer
             {
@@ -80,11 +79,13 @@ const transfer = async (
 const transferCrossChainSameAccount = async (
   tokenAddress,
   account,
+  accountPrivKey,
   amount,
   fromChain,
   toChain
 ) => {
   try {
+    const accountPubKey = getPubFromPriv(accountPrivKey);
     const burn = await Pact.fetch.send(
       {
         pactCode: `(${tokenAddress}.transfer-crosschain ${JSON.stringify(account)} ${JSON.stringify(account)} (read-keyset "own-ks") ${JSON.stringify(toChain)} ${formatAmount(amount)})`,
@@ -92,13 +93,13 @@ const transferCrossChainSameAccount = async (
         keyPairs: [{
           //EXCHANGE ACCOUNT KEYS
           //  PLEASE KEEP SAFE
-          publicKey: PUB_KEY,
-          secretKey: PRIV_KEY,
+          publicKey: accountPubKey,
+          secretKey: accountPrivKey,
           clist: []
         }],
         meta: Pact.lang.mkMeta(account, fromChain, GAS_PRICE, GAS_LIMIT, creationTime(), TTL),
         envData: {
-          "own-ks": {"pred":"keys-all","keys":[PUB_KEY]}
+          "own-ks": {"pred":"keys-all","keys":[accountPubKey]}
         },
       },
       host(fromChain)
@@ -145,11 +146,13 @@ const transferCrossChainSameAccount = async (
 const balanceFunds = async (
   tokenAddress,
   account,
+  accountPrivKey,
   amountRequested,
   amountAvailable,
   chainId
 ) => {
   try {
+    const accountPubKey = getPubFromPriv(accountPrivKey);
     let chainBalances = {};
     for (let i = 0; i < 20; i++) {
       if (i.toString() === chainId) continue;
@@ -173,7 +176,7 @@ const balanceFunds = async (
       if (total > amountNeeded) break;
     }
     for (let i = 0; i < transfers.length; i++) {
-      await transferCrossChainSameAccount('coin', PUB_KEY, transfers[i][1], transfers[i][0], chainId)
+      await transferCrossChainSameAccount('coin', account, accountPrivKey, transfers[i][1], transfers[i][0], chainId)
     }
     return `BALANCE FUNDS SUCCESS`
   } catch (e) {
