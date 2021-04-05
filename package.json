@@ -1,0 +1,31 @@
+{
+  "name": "kda-exchange-integration",
+  "version": "1.0.0",
+  "description": "Javascript example functions for exchange and other integrations with Kadena blockchain",
+  "keywords": [
+    "chainweb",
+    "kadena",
+    "KDA",
+    "blockchain",
+    "api"
+  ],
+  "main": "main.js",
+  "scripts": {},
+  "author": "Francesco Melpignano <francesco@kadena.io>",
+  "license": "MIT",
+  "dependencies": {
+    "base64-url": ">= 2.3.3",
+    "eventsource": "^1.1.0",
+    "node-fetch": ">= 2.6.1",
+    "p-retry": "^4.5.0",
+    "pact-lang-api": "^4.1.2"
+  },
+  "files": [
+    "package.json",
+    "standalone-functions/*.js",
+    "chain-data/*.js",
+    "util/*.js",
+    "var/*.js",
+    "main.js"
+  ]
+}

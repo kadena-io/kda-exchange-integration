@@ -1,4 +1,4 @@
-var Pact = require('./pact-lang-api')
+var Pact = require('pact-lang-api')
 
 const sleepPromise = async (timeout) => {
   return new Promise(resolve => {

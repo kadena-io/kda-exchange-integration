@@ -21,7 +21,6 @@ Easily integrate an exchange backend to Kadena's blockchain ecosystem
 ## Features
 
 - `/util` dir
-  - `pact-lang-api.js` is javascript implementation for interacting with Kadena blockchain. Note it is also an [npm package](https://www.npmjs.com/package/pact-lang-api) that you can check for future updates
   - `blockchain-write.js` are function calls that write new data to the blockchain using the `/send` endpoint of a `chainweb-node`
   - `blockchain-read.js` are function calls that read data from the blockchain using the `/local` endpoint of a `chainweb-node`
     - you can use `getAcctDetails()` to fetch the balance for any account, including your own

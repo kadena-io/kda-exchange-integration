@@ -1,4 +1,4 @@
-var Pact = require('./pact-lang-api.js')
+var Pact = require('pact-lang-api')
 var {
   NETWORK_ID,
   SERVER,
