@@ -3,16 +3,25 @@
  * Author: Lar Kuhtz
  */
 
+/* ************************************************************************** */
+/* Dependencies */
+
+/* External */
 const base64url = require("base64-url");
 const fetch = require("node-fetch");
-var EventSource = require('eventsource')
+const EventSource = require('eventsource')
 const pRetry = require('p-retry');
+
+/* Internal */
+const HeaderBuffer = require('./HeaderBuffer');
 
 /* ************************************************************************** */
 /* Utils */
 
 /**
  * Decode base64url encoded JSON text
+ *
+ * @param {string} txt - base64url encoded json text
  */
 const base64json = txt => JSON.parse(base64url.decode(txt));
 
@@ -77,24 +86,30 @@ const retryFetch = async (retryOptions, fetchAction) => {
 }
 
 /**
+ * Create URL for the Chainweb API
+ *
  * @param {string} [network="mainnet01"] - chainweb network
  * @param {string} [host="https://api.chainweb.com"] - chainweb api host
  * @param {string} pathSuffix - suffix of the path that is appended to the path of the base URL
+ * @return {Object} URL
  */
 const baseUrl = (network = "mainnet01", host = "https://api.chainweb.com", pathSuffix) => {
     return new URL(`${host}/chainweb/0.0/${network}/${pathSuffix}`);
 }
 
 /**
+ * Create URL for a chain endpoint of the Chainweb API
+ *
  * @param {number|string} chainId - a chain id that is valid for the network
  * @param {string} [network="mainnet01"] - chainweb network
  * @param {string} [host="https://api.chainweb.com"] - chainweb api host
  * @param {string} pathSuffix - suffix of the path that is appended to the path of the chain URL
+ * @return {Object} URL
  */
 const chainUrl = (chainId, network, host, pathSuffix) => {
-    // if (! chainId) {
-    //     throw "missing chainId parameter";
-    // }
+    if (chainId == null) {
+        throw "missing chainId parameter";
+    }
     return baseUrl(network, host, `chain/${chainId}/${pathSuffix}`);
 }
 
@@ -232,34 +247,63 @@ const payloads = async (chainId, hashes, network, host, retryOptions) => {
 }
 
 /**
- * Call back for processing individual headers of a header stream
+ * Callback for processing individual items of an updates stream
  *
- * @callback headerCallback
- * @param {Object} header - block header object
+ * @callback updatesCallback
+ * @param {Object} update - update object
  */
 
 /**
- * @param {headerCallback} callback - header callback for handling block headers
+ * @param {headerCallback} callback - function that is called for each update
  * @param {string} [network="mainnet01"] - chainweb network
  * @param {string} [host="https://api.chainweb.com"] - chainweb api host
  */
-const headerStream = (callback, network, host) => {
+const headerUpdates = (callback, network, host) => {
     const url = baseUrl(network, host, "header/updates");
     const es = new EventSource(`${url}`);
-
     es.onerror = (err) => { throw err; };
-
-    es.addEventListener('BlockHeader', (m) => {
-        const hdr = JSON.parse(m.data).header;
-        callback(hdr);
-    });
-
+    es.addEventListener('BlockHeader', m => callback(JSON.parse(m.data)));
     return es;
+}
+
+/**
+ * Apply callback to new updates.
+ *
+ * Same as headerUpdates, but filters for chains and only processes header
+ * updates that have reached the given confirmation depth in the chain.
+ *
+ * @param {number} depth - confirmation depth at which blocks are yielded
+ * @param {number[]} chainIds - array of chainIds from which blocks are included
+ * @param {blockCallback} callback - function that is called for each update
+ * @param {string} [network="mainnet01"] - chainweb network
+ * @param {string} [host="https://api.chainweb.com"] - chainweb api host
+ * @returns the event source object the backs the stream
+ */
+const chainUpdates = (depth, chainIds, callback, network, host) => {
+    let bs = {};
+    chainIds.forEach(x => bs[x] = new HeaderBuffer(depth, callback));
+    return headerUpdates(
+        hdr => bs[hdr.header.chainId]?.add(hdr),
+        network,
+        host
+    );
 }
 
 /* ************************************************************************** */
 /* Headers */
 
+/**
+ * Headers from a range of block heights
+ *
+ * @param {number|string} chainId - a chain id that is valid for the network
+ * @param {number} start - start block height
+ * @param {number} end - end block height
+ * @param {string} [network="mainnet01"] - chainweb network
+ * @param {string} [host="https://api.chainweb.com"] - chainweb api host
+ * @return {Promise} Array of block headers
+ *
+ * TODO: support paging
+ */
 const headers = async (chainId, start, end, network, host) => {
     const cut = await currentCut(network, host);
     return branch(
@@ -269,12 +313,23 @@ const headers = async (chainId, start, end, network, host) => {
             start,
             end,
             network,
-            host,
-            ro
+            host
         )
         .then(x => x.items);
 }
 
+/**
+ * Recent Headers
+ *
+ * @param {number|string} chainId - a chain id that is valid for the network
+ * @param {number} depth - confirmation depth. Only headers at this depth are returned
+ * @param {number} n - maximual number of headers that are returned. The actual number of returned headers may be lower.
+ * @param {string} [network="mainnet01"] - chainweb network
+ * @param {string} [host="https://api.chainweb.com"] - chainweb api host
+ * @return {Promise} Array of headers
+ *
+ * TODO: support paging
+ */
 const recentHeaders = async (chainId, depth = 0, n = 1, network, host) => {
     const cut = await currentCut(network, host);
     return branch(
@@ -289,10 +344,33 @@ const recentHeaders = async (chainId, depth = 0, n = 1, network, host) => {
         .then(x => x.items);
 }
 
+/**
+ * Callback for processing individual items of a header stream
+ *
+ * @callback headerCallback
+ * @param {Object} header - header object
+ */
+
+/**
+ * Apply callback to new header.
+ *
+ * @param {number} depth - confirmation depth at which blocks are yielded
+ * @param {number[]} chainIds - array of chainIds from which blocks are included
+ * @param {blockCallback} callback - function that is called for each header
+ * @param {string} [network="mainnet01"] - chainweb network
+ * @param {string} [host="https://api.chainweb.com"] - chainweb api host
+ * @returns the event source object the backs the stream
+ */
+const headerStream = (depth, chainIds, callback, network, host) => {
+    return chainUpdates(depth, chainIds, u => callback(u.header), network, host);
+}
+
 /* ************************************************************************** */
 /* Blocks */
 
-/* Given a set of blocks, collect the corresponding payloads with outputs.
+/**
+ * Utility function for collecting the payloads with outputs for a set
+ * of headers from the same chain.
  *
  * TODO: Currently all blocks must be from the same chain. We should support
  * blocks from different chains.
@@ -330,11 +408,35 @@ const headers2blocks = async (hdrs, network, host, retryOptions) => {
     return result;
 }
 
+/**
+ * Blocks from a range of block heights
+ *
+ * @param {number|string} chainId - a chain id that is valid for the network
+ * @param {number} start - start block height
+ * @param {number} end - end block height
+ * @param {string} [network="mainnet01"] - chainweb network
+ * @param {string} [host="https://api.chainweb.com"] - chainweb api host
+ * @return {Promise} Array of blocks
+ *
+ * TODO: support paging
+ */
 const blocks = async (chainId, start, end, network, host) => {
     let hdrs = await headers(chainId, start, end, network, host);
-    return headers2blocks(network, host, hdrs);
+    return headers2blocks(hdrs, network, host);
 }
 
+/**
+ * Recent Blocks
+ *
+ * @param {number|string} chainId - a chain id that is valid for the network
+ * @param {number} depth - confirmation depth. Only blocks at this depth are returned
+ * @param {number} n - maximual number of blocks that are returned. The actual number of returned blocks may be lower.
+ * @param {string} [network="mainnet01"] - chainweb network
+ * @param {string} [host="https://api.chainweb.com"] - chainweb api host
+ * @return {Promise} Array of blocks
+ *
+ * TODO: support paging
+ */
 const recentBlocks = async (chainId, depth = 0, n = 1, network, host) => {
     let hdrs = await recentHeaders(chainId, depth, n, network, host);
     let ro = {}
@@ -344,69 +446,124 @@ const recentBlocks = async (chainId, depth = 0, n = 1, network, host) => {
     return headers2blocks(hdrs, network, host, ro);
 }
 
-/* TODO: buffer chunks of headers and replace delay parameter by
- * number of buffered blocks.
+/**
+ * Callback for processing individual items of a block stream
+ *
+ * @callback blockCallback
+ * @param {Object} block - block object
  */
-const blockStream = (callback, network, host) => {
-    const ro = { retry404: true, minTimeout: 1000 };
-    headerStream(
-        hdr => {
-            headers2blocks([hdr], network, host, ro)
-            .then(blocks => callback(blocks[0]))
-            .catch(err => console.log(err));
-        },
-        network,
-        host
-    );
+
+/**
+ * Apply callback to new blocks.
+ *
+ * @param {number} depth - confirmation depth at which blocks are yielded
+ * @param {number[]} chainIds - array of chainIds from which blocks are included
+ * @param {blockCallback} callback - function that is called for each block
+ * @param {string} [network="mainnet01"] - chainweb network
+ * @param {string} [host="https://api.chainweb.com"] - chainweb api host
+ * @returns the event source object the backs the stream
+ */
+const blockStream = (depth, chainIds, callback, network, host) => {
+    const ro = depth > 1 ? {} : { retry404: true, minTimeout: 1000 };
+    const cb = hdr => {
+        headers2blocks([hdr], network, host, ro)
+        .then(blocks => callback(blocks[0]))
+        .catch(err => console.log(err));
+    };
+    return headerStream(depth, chainIds, cb, network, host);
 }
 
 /* ************************************************************************** */
 /* Transactions */
 
+/**
+ * Utility function to filter the transactions from an array of blocks
+ */
 const filterTxs = (blocks) => {
     return blocks
         .filter(x => x.payload.transactions.length > 0)
-        .flatMap(x => x.payload.transactions)
+        .flatMap(x => {
+            let txs = x.payload.transactions;
+            txs.forEach(tx => tx.height = x.header.height);
+            return txs;
+        });
 }
 
-
+/**
+ * Transactions from a range of block heights
+ *
+ * @param {number|string} chainId - a chain id that is valid for the network
+ * @param {number} start - start block height
+ * @param {number} end - end block height
+ * @param {string} [network="mainnet01"] - chainweb network
+ * @param {string} [host="https://api.chainweb.com"] - chainweb api host
+ * @return {Promise} Array of transactions
+ *
+ * TODO: support paging
+ */
 const txs = async (chainId, start, end, network, host) => {
     return blocks(chainId, start, end, network, host).then(filterTxs);
 }
 
+/**
+ * Recent Transactions
+ *
+ * @param {number|string} chainId - a chain id that is valid for the network
+ * @param {number} depth - confirmation depth. Only transactions of blocks that this depth are returned
+ * @param {number} n - maximual number of blocks from which transactions are returned. The actual number of returned transactions may be lower
+ * @param {string} [network="mainnet01"] - chainweb network
+ * @param {string} [host="https://api.chainweb.com"] - chainweb api host
+ * @return {Promise} Array of transactions
+ *
+ * TODO: support paging
+ */
 const recentTxs = async (chainId, depth = 0, n = 1, network, host) => {
     return recentBlocks(chainId, depth, n, network, host).then(filterTxs);
 }
 
-const txStream = (callback, network, host) => {
-    const url = baseUrl(host, network, "header/updates");
-    const es = new EventSource(`${url}`);
+/**
+ * Callback for processing individual items of a transaction stream
+ *
+ * @callback transactionCallback
+ * @param {Object} transaction - transaction object
+ */
 
-    es.onerror = (err) => { throw err; };
-
-    es.addEventListener('BlockHeader', (m) => {
-        const ro = { retry404: true, minTimeout: 1000 };
-        const data = JSON.parse(m.data);
-        if (data.txCount > 0) {
-            headers2blocks([data.header], network, host, ro)
-            .then(blocks => {
-                const txs = filterTxs(blocks)
-                txs.map(x => callback(x));
-            })
+/**
+ * Apply callback to new transactions.
+ *
+ * @param {number} depth - confirmation depth at which blocks are yielded
+ * @param {number[]} chainIds - array of chainIds from which blocks are included
+ * @param {transactionCallback} callback - function that is called for each transaction
+ * @param {string} [network="mainnet01"] - chainweb network
+ * @param {string} [host="https://api.chainweb.com"] - chainweb api host
+ * @returns the event source object the backs the stream
+ */
+const txStream = (depth, chainIds, callback, network, host) => {
+    const ro = depth > 1 ? {} : { retry404: true, minTimeout: 1000 };
+    const cb = u => {
+        if (u.txCount > 0) {
+            headers2blocks([u.header], network, host, ro)
+            .then(blocks => filterTxs(blocks).forEach(callback))
             .catch(err => console.log(err));
         }
-    });
-    return es;
+    };
+    return chainUpdates(depth, chainIds, cb, network, host);
 }
 
 /* ************************************************************************** */
 /* Events */
 
+/**
+ * Utility function to filter the events from an array of blocks
+ */
 const filterEvents = (blocks) => {
     return blocks
         .filter(x => x.payload.transactions.length > 0)
-        .flatMap(x => x.payload.transactions.flatMap(y => y.output.events))
-        .filter(x => x !== undefined);
+        .flatMap(x => x.payload.transactions.flatMap(y => {
+            let es = y.output.events ?? [];
+            es.forEach(e => e.height = x.header.height);
+            return es;
+        }));
 }
 
 const events = async (chainId, start, end, network, host) => {
@@ -414,10 +571,10 @@ const events = async (chainId, start, end, network, host) => {
 }
 
 /**
- * Payloads with outputs
+ * Recent Events
  *
  * @param {number|string} chainId - a chain id that is valid for the network
- * @param {number} depth - confirmation depth. Only events of blocks that this depth are returned.
+ * @param {number} depth - confirmation depth. Only events of blocks that this depth are returned
  * @param {number} n - maximual number of blocks from which events are returned. The actual number of returned events may be lower.
  * @param {string} [network="mainnet01"] - chainweb network
  * @param {string} [host="https://api.chainweb.com"] - chainweb api host
@@ -429,30 +586,37 @@ const recentEvents = async (chainId, depth = 0, n = 1, network, host) => {
     return recentBlocks(chainId, depth, n, network, host).then(filterEvents);
 }
 
-/* the implementation is similar to blocks stream, but ignores
- * headers without txs
+/**
+ * Callback for processing individual items of an event stream
+ *
+ * @callback eventCallback
+ * @param {Object} event - event object
  */
-const eventStream = (callback, network, host) => {
-    const url = baseUrl(host, network, "header/updates");
-    const es = new EventSource(`${url}`);
 
-    es.onerror = (err) => { throw err; };
-
-    es.addEventListener('BlockHeader', (m) => {
-        const ro = { retry404: true, minTimeout: 1000 };
-        const data = JSON.parse(m.data);
-        if (data.txCount > 0) {
-            headers2blocks([data.header], network, host, ro)
-            .then(blocks => {
-                filterEvents(blocks).map(x => callback(x));
-            })
+/**
+ * Apply callback to new events.
+ *
+ * @param {number} depth - confirmation depth at which blocks are yielded
+ * @param {number[]} chainIds - array of chainIds from which blocks are included
+ * @param {eventCallback} callback - function that is called for each event
+ * @param {string} [network="mainnet01"] - chainweb network
+ * @param {string} [host="https://api.chainweb.com"] - chainweb api host
+ * @returns the event source object the backs the stream
+ */
+const eventStream = (depth, chainIds, callback, network, host) => {
+    const ro = depth > 1 ? {} : { retry404: true, minTimeout: 1000 };
+    const cb = u => {
+        if (u.txCount > 0) {
+            headers2blocks([u.header], network, host, ro)
+            .then(blocks => filterEvents(blocks).forEach(callback))
             .catch(err => console.log(err));
         }
-    });
-    return es;
+    };
+    return chainUpdates(depth, chainIds, cb, network, host);
 }
 
 /* ************************************************************************** */
+/* Module Exports */
 
 module.exports = {
     cut: {
@@ -481,5 +645,5 @@ module.exports = {
         range: txs,
         recent: recentTxs,
         stream: txStream
-    }
+    },
 };
