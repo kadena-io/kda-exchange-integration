@@ -78,7 +78,7 @@ const createAddresses = async (
                   }
                 ]
               }],
-              meta: Pact.lang.mkMeta(signingAccount, chainId, GAS_PRICE, 1400000, creationTime(), TTL),
+              meta: Pact.lang.mkMeta(signingAccount, chainId, GAS_PRICE, 149990, creationTime(), TTL),
               envData: envData,
             },
             host(chainId)
@@ -111,13 +111,19 @@ const createAddresses = async (
 }
 
 //EXAMPLE CALL
+//Pregenerate accounts that can be used later
+//Save the generated keypairs somewhere
 const keyPairs = [];
 const publicKeys = [];
-//MAXIMUM AROUND 1400 accounts at a time due to gas limit per block
-for (let i = 0; i < 1000; i++) {
+
+//MAXIMUM ~550 accounts can be created at once due to gas limit per block
+//  each account creation consumes ~250 GAS
+//  mainnet block gas limit is 150,000
+
+for (let i = 0; i < 550; i++) {
   const kp = Pact.crypto.genKeyPair();
   publicKeys.push(kp.publicKey);
   keyPairs.push(kp)
 }
-//save keypairs somewhere for future use
+
 createAddresses('coin', publicKeys, PUB_KEY, PRIV_KEY);
