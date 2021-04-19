@@ -116,11 +116,13 @@ const createAddresses = async (
 const keyPairs = [];
 const publicKeys = [];
 
-//MAXIMUM ~550 accounts can be created at once due to gas limit per block
+//MAXIMUM ~400 accounts can be created at once due to gas limit per block
 //  each account creation consumes ~250 GAS
 //  mainnet block gas limit is 150,000
 
-for (let i = 0; i < 550; i++) {
+//change from 100 to any number of account you would like to create
+//  please keep
+for (let i = 0; i < 100; i++) {
   const kp = Pact.crypto.genKeyPair();
   publicKeys.push(kp.publicKey);
   keyPairs.push(kp)
