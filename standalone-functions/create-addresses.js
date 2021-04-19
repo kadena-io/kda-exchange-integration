@@ -121,7 +121,7 @@ const publicKeys = [];
 //  mainnet block gas limit is 150,000
 
 //change from 100 to any number of account you would like to create
-//  please keep
+//  please keep it conservative as it depends on current network load
 for (let i = 0; i < 100; i++) {
   const kp = Pact.crypto.genKeyPair();
   publicKeys.push(kp.publicKey);
