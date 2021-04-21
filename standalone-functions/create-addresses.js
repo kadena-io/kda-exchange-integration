@@ -58,50 +58,36 @@ const createAddresses = async (
         //register accounts on all 20 chains
         for (let i = 0; i < 20; i++) {
           let chainId = i.toString()
-          const res = await Pact.fetch.send(
-            {
-              pactCode: pactCode,
-              networkId: NETWORK_ID,
-              keyPairs: [{
-                //EXCHANGE ACCOUNT KEYS
-                //  PLEASE KEEP SAFE
-                //YOU CAN CONSIDER USING AN ACCOUNT WITH VERY FEW FUNDS IN IT
-                //  an account with 1kda will create over a million addresses!
-                //MUST HAVE FUNDS ON ALL CHAINS
-                publicKey: signingPubKey,
-                secretKey: signingPrivKey,
-                clist: [
-                  //capability for gas
-                  {
-                    name: `coin.GAS`,
-                    args: []
-                  }
-                ]
-              }],
-              meta: Pact.lang.mkMeta(signingAccount, chainId, GAS_PRICE, 149990, creationTime(), TTL),
-              envData: envData,
-            },
-            host(chainId)
+          const reqKey = await createAddressHelper(
+            pactCode,
+            chainId,
+            envData,
+            signingAccount,
+            signingPubKey,
+            signingPrivKey
           )
-          const reqKey = res.requestKeys[0];
           reqKeys[chainId] = reqKey;
         }
+        console.log(reqKeys)
         //poll all 20 chains for results
         pollResponses = {};
+        failedPollResponses = {};
         for (let i = 0; i < 20; i++) {
           let chainId = i.toString();
           const pollRes = await pollTxRes(reqKeys[chainId], host(chainId));
           pollResponses[chainId] = pollRes
-        }
-        //check all were successfull
-        for (let i = 0; i < 20; i++) {
-          let chainId = i.toString();
-          if (pollResponses[chainId].result.status !== 'success') {
-            return "CREATE ADDRESS FAILED: one or more addresses failed to create";
+          if (pollResponses[chainId] === 'POLL FAILED: Please try again. Note that the transaction specified may not exist on target chain') {
+            failedPollResponses[chainId] = pollResponses[chainId]
           }
         }
+        console.log(pollResponses)
         //all were successfull
-        return `CREATE ADDRESS SUCCESS: for ${publicKeys}`
+        if (Object.keys(failedPollResponses).length === 0) {
+          return `CREATE ADDRESS SUCCESS: for ${publicKeys}`
+        } else {
+          console.log(failedPollResponses)
+          return "CANNOT PROCESS CREATE ADDRESS: one or more chains failed to create. Please run method again with new keys"
+        }
       } catch (e) {
         console.log(e);
         return "CANNOT PROCESS CREATE ADDRESS: network error"
@@ -109,6 +95,61 @@ const createAddresses = async (
 
   }
 }
+
+/**
+ * Helper to create address on one chain
+ ** NOTE: to maintain safety of funds, please ensure the address is created on ALL 20 CHAINS
+ ***      this is a necessary precauction as people may 'squat' on accounts
+ * @param pactCode {string} - this is the pact code to send to a node
+ * @param chainId {string} - chain id to write tx on
+ * @param envData {object} - data to assosciate to tx
+                                ex: { 'keyset': { 'pred':'keys-all', 'keys':[pub-key] } }
+ * @param signingAccount {string} - address / account name of signing account
+ * @param signingPrivKey {string} - public key assosciated with signing account
+ * @param signingPrivKey {string} - private key assosciated with signing account
+ * @return {string} success or failure with message
+**/
+const createAddressHelper = async (
+  pactCode,
+  chainId,
+  envData,
+  signingAccount,
+  signingPubKey,
+  signingPrivKey
+) => {
+  try {
+    const cmd = {
+      pactCode: pactCode,
+      networkId: NETWORK_ID,
+      keyPairs: [{
+        //EXCHANGE ACCOUNT KEYS
+        //  PLEASE KEEP SAFE
+        //YOU CAN CONSIDER USING AN ACCOUNT WITH VERY FEW FUNDS IN IT
+        //  an account with 1kda will create over a million addresses!
+        //MUST HAVE FUNDS ON ALL CHAINS
+        publicKey: signingPubKey,
+        secretKey: signingPrivKey,
+        clist: [
+          //capability for gas
+          {
+            name: `coin.GAS`,
+            args: []
+          }
+        ]
+      }],
+      meta: Pact.lang.mkMeta(signingAccount, chainId, 0.000001, 60000, creationTime(), TTL),
+      envData: envData,
+    }
+    const res = await Pact.fetch.send(cmd, host(chainId))
+    console.log(res)
+    const reqKey = res.requestKeys[0];
+    return reqKey
+  } catch (e) {
+    console.log(e);
+    return 'ERROR: tx not accepted by blockchain'
+  }
+}
+
 
 //EXAMPLE CALL
 //Pregenerate accounts that can be used later

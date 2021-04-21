@@ -26,7 +26,13 @@ const formatAmount = (amount) => {
   return (Math.floor(amount * 1e8) / 1e8).toFixed(8);
 };
 
+const formatAmountTwelve = (amount) => {
+  //allowing max of 12 decimal places
+  return (Math.floor(amount * 1e12) / 1e12).toFixed(12);
+};
+
 module.exports = {
   checkKey,
-  formatAmount
+  formatAmount,
+  formatAmountTwelve
 }
