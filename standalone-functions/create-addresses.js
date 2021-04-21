@@ -3,8 +3,8 @@ var {
   NETWORK_ID,
   SERVER,
   TTL,
-  GAS_LIMIT,
-  GAS_PRICE,
+  HIGH_GAS_LIMIT,
+  HIGH_GAS_PRICE,
   creationTime,
   host
 } = require('../var/network-config.js')
@@ -137,7 +137,7 @@ const createAddressHelper = async (
           }
         ]
       }],
-      meta: Pact.lang.mkMeta(signingAccount, chainId, 0.000001, 60000, creationTime(), TTL),
+      meta: Pact.lang.mkMeta(signingAccount, chainId, HIGH_GAS_PRICE, HIGH_GAS_LIMIT, creationTime(), TTL),
       envData: envData,
     }
     const res = await Pact.fetch.send(cmd, host(chainId))
