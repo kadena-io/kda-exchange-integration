@@ -13,7 +13,7 @@ const getTransfers = async (chainId, startBlock, endBlock) => {
       if (events) {
         //check if tx has transfer events
         for (let j = 0; j < events.length; j++) {
-          if (events[j].name === "TRANSFER") {
+          if (events[j].name === "TRANSFER" && events[j].module.name === "coin") {
             sameChainTransfers.push(
               {
                 "from": events[j].params[0],
@@ -43,7 +43,7 @@ const getTransfers = async (chainId, startBlock, endBlock) => {
             continue
           }
         } else {
-          //not a cross-chain transfer
+          //not a pact continution, so not a cross-chain transfer
           continue
         }
       }
