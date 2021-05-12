@@ -6,6 +6,14 @@ const sleepPromise = async (timeout) => {
   });
 }
 
+const getDecimal = (decObj) => {
+  if (decObj.decimal) {
+    return parseFloat(decObj.decimal)
+  } else {
+    return decObj
+  }
+}
+
 const pollTxRes = async (reqKey, host) => {
   //check kadena tx status until we get a response (success or fail
   //  or 480 seconds has gone by
@@ -92,5 +100,6 @@ module.exports = {
   pollTxRes,
   pollTxResWithTime,
   makePactContCommand,
-  getPubFromPriv
+  getPubFromPriv,
+  getDecimal
 }

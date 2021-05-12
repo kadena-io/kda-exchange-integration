@@ -39,8 +39,8 @@ const getTxStatus = async (
   chainId
 ) => {
     const pollResult = await pollTxRes(reqKey, host(chainId));
-    console.log(pollResult);
+    console.log(JSON.stringify(pollResult));
     return pollResult
 }
 
-getTxStatus('llFl8N8bSoCcLPeI2UZOnxieT-iwXu_7PWluPAn-R5s', '1')
+getTxStatus('DJO6gZGjeNI07sqhSl14wyDVllr0rTixYvRXHGW1kpw', '1')

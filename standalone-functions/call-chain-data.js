@@ -55,7 +55,7 @@ const HeaderBuffer = require('../chain-data/HeaderBuffer');
 
 // chainweb.headers.range(0, 1500000, 1500010).then(x => console.log("Headers:", x));
 // chainweb.blocks.range(0, 1500000, 1500010).then(x => console.log("Blocks:", x));
-// chainweb.transactions.range(0, 1500000, 1500010).then(x => console.log("Transactions:", x));
+chainweb.transactions.range(1, 1613200, 1613308).then(x => console.log("Transactions:", JSON.stringify(x)));
 // chainweb.events.range(0, 1500000, 1500010).then(x => console.log("Events:", x));
 
 /* ************************************************************************** */
@@ -110,4 +110,4 @@ function testHeaderBuffer () {
     return output.every(x => x.header.hash == a++);
 }
 
-console.log(testHeaderBuffer());
+// console.log(testHeaderBuffer());

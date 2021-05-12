@@ -3,13 +3,13 @@
 //------------------------------------------------------------------------------------------------------------------------
 
 //UNCOMMENT TWO CONSTS FOR MAINNET
-// const NETWORK_ID = 'mainnet01';
+const NETWORK_ID = 'mainnet01';
 //SHOULD REPLACE URL WITH OWN NODE IP:PORT
-// const SERVER = 'api.chainweb.com';
+const SERVER = 'api.chainweb.com';
 
 //COMMENT OUT FOR MAINNET
-const NETWORK_ID = 'testnet04';
-const SERVER = 'api.testnet.chainweb.com';
+// const NETWORK_ID = 'testnet04';
+// const SERVER = 'api.testnet.chainweb.com';
 //
 //
 const TTL = 28800;
