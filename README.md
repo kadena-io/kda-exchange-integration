@@ -4,7 +4,8 @@ Easily integrate an exchange backend to Kadena's blockchain ecosystem
 
 ## Assumptions
 
-- Exchange uses a single-sig public-key account
+- Exchange uses a single-sig k-account based on a public-key (see
+  [https://medium.com/kadena-io/introducing-kadena-account-protocols-kip-0012-303462b77af1])
 - It has enough funds to process the withdraws
 - `tokenAddress` for kda token is `coin`
   - this can be replaced with the address of any other `fungible` token deployed on Kadena for example `free.anedak`
