@@ -40,10 +40,11 @@ const processWithdraw = async (
       if (details.account !== null) {
           //account exists on chain
 
-          if (!checkKAccount(toAcct))  // Should we disable deposit to multisig and weird rotations? && details.guard.keys.length == 1 && extractPubKeyFromKAccount(toAcct) == details.guard.keys[0]) {
-            //account is not a k: account
+           // Reject all accounts that either don't conform to k-standard, or that do conform to
+           // k-standard but have keysets that have been rotated
+          if (!checkKAccount(toAcct) || details.guard.keys.length != 1 || extractPubKeyFromKAccount(toAcct) != details.guard.keys[0]) {
             //EXIT function
-            return "CANNOT PROCESS WITHDRAW: account does not conform to k-standard"
+            return "CANNOT PROCESS WITHDRAW: account does not conform to k-standard or has rotated keyset"
           } else {
             //send to this account with this guard
             const res = await transfer(tokenAddress, fromAcct, fromAcctPrivKey, toAcct, amount, chainId, details.guard)
