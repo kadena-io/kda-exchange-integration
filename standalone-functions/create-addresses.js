@@ -20,8 +20,8 @@ var {
   PRIV_KEY
 } = require('../var/keys.js')
 
-/** NOTE: This is a legacy function, and it is no longer required to create an account
- *  on all 20 chains, as long as it is a k-style account
+/** NOTE: This is a legacy function, and it is no longer required to pre-create an account
+ *  accross all 20 chains for safety (as long as it is a k-style account)
 **/
 
 /**
