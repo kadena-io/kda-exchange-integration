@@ -5,6 +5,8 @@ var {
 
 /**
  * Gets all transfers (same and cross chain) on a given chain for a given blockheight range
+ * @param tokenAddress {string} - this is the address of the token kda token is 'coin'
+ *                                  an abritrary token example is 'runonflux.flux' for flux token deployed on our network
  * @param chainId {string} - this is the chain you are listening for transfers on
  * @param startBlock {int} - block height to start looking
  * @param endBlock {int} - block height to end looking
@@ -29,7 +31,7 @@ var {
      ...,
    ]
 **/
-const getTransfers = async (chainId, startBlock, endBlock) => {
+const getTransfers = async (tokenAddress, chainId, startBlock, endBlock) => {
   let txs = await chainweb.transactions.range(chainId, startBlock, endBlock);
   const transfers = [];
   for (let i = 0; i < txs.length; i++) {
@@ -38,7 +40,7 @@ const getTransfers = async (chainId, startBlock, endBlock) => {
       if (events) {
         //check if tx has transfer events
         for (let j = 0; j < events.length; j++) {
-          if (events[j].name === "TRANSFER" && events[j].module.name === "coin") {
+          if (events[j].name === "TRANSFER" && events[j].module.name === tokenAddress) {
             transfers.push(
               {
                 "from": events[j].params[0],
@@ -54,7 +56,7 @@ const getTransfers = async (chainId, startBlock, endBlock) => {
       } else {
         //not a direct transfer
         if (txs[i].output.continuation) {
-          if (txs[i].output.continuation.continuation.def === 'coin.transfer-crosschain') {
+          if (txs[i].output.continuation.continuation.def === `${tokenAddress}.transfer-crosschain`) {
             transfers.push(
               {
                 "from": txs[i].output.continuation.continuation.args[0],
@@ -84,4 +86,4 @@ const getTransfers = async (chainId, startBlock, endBlock) => {
 }
 
 
-getTransfers(0, 1615447, 1615482)
+getTransfers('coin', 0, 1615447, 1615482)

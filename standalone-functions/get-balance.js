@@ -7,7 +7,7 @@ var {
  * get balance of address on all 20 chains
  * @param tokenAddress {string} - this is the address of the token kda token is 'coin'
  *                                  an abritrary token example is 'runonflux.flux' for flux token deployed on our network
- * @param userAddress {string} - address of account you would like to create (this is usually a public key)
+ * @param userAddress {string} - address of account you would like to query
  * @return {object} object with chain id and corresponding balance. will use "N/A" as balance if account does not exist on a given chain
  *  format: {"chainId": balance, ...} ex: {"0": 123, ..., "19": 123}
 **/

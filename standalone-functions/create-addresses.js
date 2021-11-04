@@ -20,14 +20,16 @@ var {
   PRIV_KEY
 } = require('../var/keys.js')
 
+/** NOTE: This is a legacy function, and it is no longer required to create an account
+ *  on all 20 chains, as long as it is a k-style account
+**/
 
 /**
- * Creates addresses for a given public key list
- ** NOTE: to maintain safety of funds, please ensure the address is created on ALL 20 CHAINS
- ***      this is a necessary precauction as people may 'squat' on accounts
+ * Creates k-style addresses for a given public key list
  * @param tokenAddress {string} - this is the address of the token kda token is 'coin'
  *                                  an abritrary token example is 'runonflux.flux' for flux token deployed on our network
- * @param publicKeys {string} - list public key address of accounts you would like to create
+ * @param publicKeys {string} - list public keys for which you would like to create k-style
+ *                                  addresses with
  * @param signingAccount {string} - address / account name of signing account
  * @param signingPrivKey {string} - private key assosciated with signing account
  * @return {string} success or failure with message
@@ -51,9 +53,9 @@ const createAddresses = async (
             "pred": "keys-all",
             "keys": [publicKeys[i]]
           }
-          pactCode += `(${tokenAddress}.create-account ${JSON.stringify(publicKeys[i])} (read-keyset "${ksName}"))`
+          const kAccount = 'k:' + publicKeys[i]
+          pactCode += `(${tokenAddress}.create-account ${JSON.stringify(kAccount)} (read-keyset "${ksName}"))`
         }
-        // const pactCode = `(${tokenAddress}.create-account ${JSON.stringify(publicKey)} (read-keyset "ks"))`
         const reqKeys = {};
         //register accounts on all 20 chains
         for (let i = 0; i < 20; i++) {
