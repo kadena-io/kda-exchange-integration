@@ -152,7 +152,6 @@ const balanceFunds = async (
   chainId
 ) => {
   try {
-    const accountPubKey = getPubFromPriv(accountPrivKey);
     let chainBalances = {};
     for (let i = 0; i < 20; i++) {
       if (i.toString() === chainId) continue;
@@ -176,7 +175,7 @@ const balanceFunds = async (
       if (total > amountNeeded) break;
     }
     for (let i = 0; i < transfers.length; i++) {
-      await transferCrossChainSameAccount('coin', account, accountPrivKey, transfers[i][1], transfers[i][0], chainId)
+      await transferCrossChainSameAccount(tokenAddress, account, accountPrivKey, transfers[i][1], transfers[i][0], chainId)
     }
     return `BALANCE FUNDS SUCCESS`
   } catch (e) {
