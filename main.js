@@ -10,11 +10,6 @@ var {
   transfer,
   balanceFunds
 } = require('./util/blockchain-write.js')
-var {
-  K_ACCOUNT,
-  PUB_KEY,
-  PRIV_KEY
-} = require('./var/keys.js')
 
 const processWithdraw = async (
     tokenAddress,
@@ -27,7 +22,7 @@ const processWithdraw = async (
     try {
       var ownDetails = await getAcctDetails(tokenAddress, fromAcct, chainId);
       if (ownDetails.balance < amount) {
-        //not enough funds on PUB_KEY account on this chain
+        //not enough funds on KACCOUNT account on this chain
         //wait for funds to be transferred from own account on other chains
         const fundedXChain = await balanceFunds(tokenAddress, fromAcct, fromAcctPrivKey, amount, ownDetails.balance, chainId);
         if (fundedXChain !== "BALANCE FUNDS SUCCESS") {
@@ -35,14 +30,15 @@ const processWithdraw = async (
           return `CANNOT PROCESS WITHDRAW: not enough funds on chain ${chainId}`
         }
       }
+
       //check if toAcct exists on specified chain
       const details = await getAcctDetails(tokenAddress, toAcct, chainId);
       if (details.account !== null) {
           //account exists on chain
 
-           // Reject all accounts that either don't conform to k-standard, or that do conform to
-           // k-standard but have keysets that have been rotated
-          if (!checkKAccount(toAcct) || details.guard.keys.length != 1 || extractPubKeyFromKAccount(toAcct) != details.guard.keys[0]) {
+           // Reject all accounts that either don't conform to k-standard. Note this will not reject
+           // k-style accounts whose guards have been rotated for a multisig
+          if (!checkKAccount(toAcct)) {
             //EXIT function
             return "CANNOT PROCESS WITHDRAW: account does not conform to k-standard or has rotated keyset"
           } else {
@@ -61,7 +57,6 @@ const processWithdraw = async (
 
           // NOTE An exchange might want to ask the user to confirm that they
           // own the private key corresponding to this public key.
-
           const toAcctPubKey = extractPubKeyFromKAccount(toAcct);
 
           // This should never happen since we already checked it
@@ -84,7 +79,7 @@ const processWithdraw = async (
 }
 
 //EXAMPLE FUNCTION CALL
-processWithdraw('coin', K_ACCOUNT, PRIV_KEY, 'k:9be19442151c880492ec0fddc5bdbe9eccd243b8d723f4673b317f10b2e5d515', 0.51, "10");
+// processWithdraw('coin', K_ACCOUNT, PRIV_KEY, 'k:9be19442151c880492ec0fddc5bdbe9eccd243b8d723f4673b317f10b2e5d515', 0.51, "10");
 
 module.exports = {
   processWithdraw

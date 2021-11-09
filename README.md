@@ -56,6 +56,8 @@ chains without access to the private key corresponding to the public key: `70c67
 ### Account name creation:
 
 ```javascript
+var Pact = require('pact-lang-api')
+
 //Pregenerate accounts that can be used later
 //Save the generated keypairs somewhere
 const keyPairs = [];
@@ -72,21 +74,26 @@ for (let i = 0; i < 100; i++) {
 
 ### Withdrawal
 ```javascript
-  var {
-    processWithdraw
-  } = require('main.js')
+var {
+  processWithdraw
+} = require('./main.js')
 
-  // Same example keys and account from var/keys.js
-  const EXCHANGE_PRIVKEY = 'd817273c1d2ef7e2ababf8cfe0579bc1ffd2c36845684a3ae4b3275e215b2080'
-  const EXCHANGE_PUBKEY = '70c67dabe9a54d1970461de00009f074e2ea22589dab553d159b6e1e93ae7e27'
-  // Exchange account; MUST BE FUNDED on at least one of the chains
-  const EXCHANGE_KACCOUNT = 'k:' + '70c67dabe9a54d1970461de00009f074e2ea22589dab553d159b6e1e93ae7e27'
+var {
+  getAcctDetails,
+} = require('./util/blockchain-read.js')
 
-  const customerAddress = "k:9be19442151c880492ec0fddc5bdbe9eccd243b8d723f4673b317f10b2e5d515"
+// Same example keys and account from var/keys.js
+const EXCHANGE_PRIVKEY = 'd817273c1d2ef7e2ababf8cfe0579bc1ffd2c36845684a3ae4b3275e215b2080'
+const EXCHANGE_PUBKEY = '70c67dabe9a54d1970461de00009f074e2ea22589dab553d159b6e1e93ae7e27'
+// Exchange account; MUST BE FUNDED on at least one of the chains
+const EXCHANGE_KACCOUNT = 'k:' + EXCHANGE_PUBKEY
 
-  // Withdrawal for 10 KDA to account: 'k:9be19442151c880492ec0fddc5bdbe9eccd243b8d723f4673b317f10b2e5d515
-  // on chain 13
-  var result = processWithdraw('coin', EXCHANGE_KACCOUNT, EXCHANGE_PRIVKEY, customerAddress, 10, "13") 
+// We only deposit to k-accounts
+const customerAddress = "k:9be19442151c880492ec0fddc5bdbe9eccd243b8d723f4673b317f10b2e5d515"
 
+
+// Withdrawal for 10 KDA to account: 'k:9be19442151c880492ec0fddc5bdbe9eccd243b8d723f4673b317f10b2e5d515
+// on chain 13 . Assumes a sufficient balance on EXCHANGE_ACCOUNT
+processWithdraw('coin', EXCHANGE_KACCOUNT, EXCHANGE_PRIVKEY, customerAddress, 10, "13").then((res) => console.log(res))
 ```
 
