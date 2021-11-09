@@ -51,7 +51,16 @@ Then the account name should be named `k:70c67dabe9a54d1970461de00009f074e2ea225
 be able to create an account named `k:70c67dabe9a54d1970461de00009f074e2ea22589dab553d159b6e1e93ae7e27` on any of the
 chains without access to the private key corresponding to the public key: `70c67dabe9a54d1970461de00009f074e2ea22589dab553d159b6e1e93ae7e27`
 
-## Example
+
+![Legacy-Account-Example](/docs/account-view.png)
+The above shows a legacy account that DOES NOT use the k-standard. You can see that the account
+exists on certain chains, but has not yet been created on others. In chainweb there is no
+restriction preventing an account name that matches a public key, from being owned and controlled by
+a different key. In the picture, this is the case of chain 4 account, which is controlled by another
+party's (possibly a malicious one) public key. This is exactly the scenario that the k-style accounts prevent.
+
+
+## Examples
 
 ### Account name creation:
 
@@ -77,10 +86,6 @@ for (let i = 0; i < 100; i++) {
 var {
   processWithdraw
 } = require('./main.js')
-
-var {
-  getAcctDetails,
-} = require('./util/blockchain-read.js')
 
 // Same example keys and account from var/keys.js
 const EXCHANGE_PRIVKEY = 'd817273c1d2ef7e2ababf8cfe0579bc1ffd2c36845684a3ae4b3275e215b2080'
