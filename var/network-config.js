@@ -13,10 +13,13 @@ const SERVER = 'api.chainweb.com';
 //
 //
 const TTL = 28800;
-const GAS_PRICE = 0.0000000001;
+const GAS_PRICE = 0.00000001
 const GAS_LIMIT = 10000;
 const HIGH_GAS_LIMIT = 60000;
-const HIGH_GAS_PRICE = 0.00000001;
+const HIGH_GAS_PRICE = 0.000001;
+
+// This parameter is subject to change in the future
+const GAS_STATION_ACCOUNT = "free-x-chain-gas"
 const creationTime = () => Math.round((new Date).getTime()/1000)-15
 const host = (chainId) => `https://${SERVER}/chainweb/0.0/${NETWORK_ID}/chain/${chainId}/pact`
 
@@ -26,6 +29,7 @@ module.exports = {
   TTL,
   GAS_PRICE,
   GAS_LIMIT,
+  GAS_STATION_ACCOUNT,
   HIGH_GAS_LIMIT,
   HIGH_GAS_PRICE,
   creationTime,

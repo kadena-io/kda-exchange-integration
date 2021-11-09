@@ -1,5 +1,7 @@
 var {
   checkKey,
+  checkKAccount,
+  extractPubKeyFromKAccount
 } = require('../util/format-helpers.js')
 var {
   getAcctDetails,
@@ -65,8 +67,22 @@ const safeTransfer = async (
         return "CANNOT PROCESS TRANSFER: account not fetched"
       } else {
         //toAcct does not yet exist
-        if (checkKey(toAcct)) {
-          //toAcct does not exist, but is a valid address
+        if (checkKAccount(toAcct)) {
+          //toAcct does not exist, but is a valid k-account
+
+          // NOTE An exchange might want to ask the user to confirm that they
+          // own the private key corresponding to this public key.
+
+          const toActPubKey = extractPubKeyFromKAccount(toAcct);
+          if(!toActPubKey) {
+            // in theory, this should never happen because we called checkKAccount above
+            return "CANNOT PROCESS TRANSFER: failed to extract pubkey from k-account"
+          }
+          const res = await transfer(tokenAddress, fromAcct, fromAcctPrivKey, toAcct, amount, chainId, {"pred":"keys-all","keys":[toActPubKey]})
+          return res
+
+        } else if (checkKey(toAcct)) {
+          //toAcct does not exist, but is a valid public-key/legacy address
 
           // NOTE An exchange might want to ask the user to confirm that they
           // own the private key corresponding to this public key.

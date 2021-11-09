@@ -51,7 +51,8 @@ const createAddresses = async (
             "pred": "keys-all",
             "keys": [publicKeys[i]]
           }
-          pactCode += `(${tokenAddress}.create-account ${JSON.stringify(publicKeys[i])} (read-keyset "${ksName}"))`
+          const kAccount = 'k:' + publicKeys[i]
+          pactCode += `(${tokenAddress}.create-account ${JSON.stringify(kAccount)} (read-keyset "${ksName}"))`
         }
         // const pactCode = `(${tokenAddress}.create-account ${JSON.stringify(publicKey)} (read-keyset "ks"))`
         const reqKeys = {};

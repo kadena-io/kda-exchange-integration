@@ -1,5 +1,7 @@
 var {
   checkKey,
+  checkKAccount,
+  extractPubKeyFromKAccount
 } = require('../util/format-helpers.js')
 var {
   getAcctDetails,

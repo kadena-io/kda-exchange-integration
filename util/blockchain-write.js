@@ -5,6 +5,7 @@ var {
   TTL,
   GAS_LIMIT,
   GAS_PRICE,
+  GAS_STATION_ACCOUNT,
   creationTime,
   host
 } = require('../var/network-config.js')
@@ -118,7 +119,7 @@ const transferCrossChainSameAccount = async (
         }
         await sleepPromise(5000);
       }
-      const meta = Pact.lang.mkMeta("free-x-chain-gas", toChain, GAS_PRICE, 300, creationTime(), TTL);
+      const meta = Pact.lang.mkMeta(`${GAS_STATION_ACCOUNT}`, toChain, GAS_PRICE, 300, creationTime(), TTL);
       // const contCmd = {type: "cont", keyPairs:[], pactId: pactId, rollback: false, step: 1, meta: m, proof: proof, networkId: NETWORK_ID};
       // const cmd = Pact.simple.cont.createCommand( contCmd.keyPairs, contCmd.nonce, contCmd.step, contCmd.pactId,
       //                                                     contCmd.rollback, contCmd.envData, contCmd.meta, contCmd.proof, contCmd.networkId);

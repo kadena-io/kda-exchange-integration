@@ -1,5 +1,7 @@
 var {
   checkKey,
+  checkKAccount,
+  extractPubKeyFromKAccount
 } = require('./util/format-helpers.js')
 var {
   getAcctDetails,
@@ -52,7 +54,15 @@ const processWithdraw = async (
         return "CANNOT PROCESS WITHDRAW: account not fetched"
       } else {
         //toAcct does not yet exist
-        if (checkKey(toAcct)) {
+        if (checkKAccount(toAcct)) {
+          const toAcctPubKey = extractPubKeyFromKAccount(toAcct);
+          // This should never happen since we already checked it
+          if(!toAcctPubKey) { return "CANNOT PROCESS WITHDRAW: account does not conform to k-standard" }
+          //send to this
+          const res = await transfer(tokenAddress, fromAcct, fromAcctPrivKey, toAcct, amount, chainId, {"pred":"keys-all","keys":[toAcctPubKey]})
+          return res
+
+        } else if (checkKey(toAcct)) {
           //toAcct does not exist, but is a valid address
 
           // NOTE An exchange might want to ask the user to confirm that they
