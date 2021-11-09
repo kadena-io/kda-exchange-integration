@@ -11,7 +11,6 @@
 const NETWORK_ID = 'testnet04';
 const SERVER = 'api.testnet.chainweb.com';
 
-
 const TTL = 28800;
 const GAS_PRICE = 0.00000001
 const GAS_LIMIT = 10000;
