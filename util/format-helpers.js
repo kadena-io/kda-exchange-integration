@@ -21,6 +21,22 @@ const checkKey = (key) => {
   }
 };
 
+const checkKAccount = (account) => {
+  if (account.startsWith("k:")) {
+    const pubKey = account.slice(2);
+    return checkKey(pubKey);
+  } else {
+    return false;
+  }
+};
+
+const extractPubKeyFromKAccount = (account) => {
+  if (checkKAccount(account)) {
+    return account.slice(2);
+  }
+  return null;
+}
+
 const formatAmount = (amount) => {
   //allowing max of 8 decimal places
   return (Math.floor(amount * 1e8) / 1e8).toFixed(8);
@@ -32,6 +48,8 @@ const formatAmountTwelve = (amount) => {
 };
 
 module.exports = {
+  checkKAccount,
+  extractPubKeyFromKAccount,
   checkKey,
   formatAmount,
   formatAmountTwelve

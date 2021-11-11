@@ -1,5 +1,7 @@
 var {
   checkKey,
+  checkKAccount,
+  extractPubKeyFromKAccount
 } = require('./util/format-helpers.js')
 var {
   getAcctDetails,
@@ -8,10 +10,6 @@ var {
   transfer,
   balanceFunds
 } = require('./util/blockchain-write.js')
-var {
-  PUB_KEY,
-  PRIV_KEY
-} = require('./var/keys.js')
 
 const processWithdraw = async (
     tokenAddress,
@@ -24,7 +22,7 @@ const processWithdraw = async (
     try {
       var ownDetails = await getAcctDetails(tokenAddress, fromAcct, chainId);
       if (ownDetails.balance < amount) {
-        //not enough funds on PUB_KEY account on this chain
+        //not enough funds on KACCOUNT account on this chain
         //wait for funds to be transferred from own account on other chains
         const fundedXChain = await balanceFunds(tokenAddress, fromAcct, fromAcctPrivKey, amount, ownDetails.balance, chainId);
         if (fundedXChain !== "BALANCE FUNDS SUCCESS") {
@@ -32,15 +30,17 @@ const processWithdraw = async (
           return `CANNOT PROCESS WITHDRAW: not enough funds on chain ${chainId}`
         }
       }
+
       //check if toAcct exists on specified chain
       const details = await getAcctDetails(tokenAddress, toAcct, chainId);
       if (details.account !== null) {
           //account exists on chain
-          if (checkKey(toAcct) && toAcct !== details.guard.keys[0]) {
-            //account is a public key account
-            //but the public key guard does not match account name public key
+
+           // Reject all accounts that either don't conform to k-standard. Note this will not reject
+           // k-style accounts whose guards have been rotated for a multisig
+          if (!checkKAccount(toAcct)) {
             //EXIT function
-            return "CANNOT PROCESS WITHDRAW: non-matching public keys"
+            return "CANNOT PROCESS WITHDRAW: account does not conform to k-standard or has rotated keyset"
           } else {
             //send to this account with this guard
             const res = await transfer(tokenAddress, fromAcct, fromAcctPrivKey, toAcct, amount, chainId, details.guard)
@@ -52,19 +52,23 @@ const processWithdraw = async (
         return "CANNOT PROCESS WITHDRAW: account not fetched"
       } else {
         //toAcct does not yet exist
-        if (checkKey(toAcct)) {
+        if (checkKAccount(toAcct)) {
           //toAcct does not exist, but is a valid address
 
           // NOTE An exchange might want to ask the user to confirm that they
           // own the private key corresponding to this public key.
+          const toAcctPubKey = extractPubKeyFromKAccount(toAcct);
+
+          // This should never happen since we already checked it
+          if(!toAcctPubKey) { return "CANNOT PROCESS WITHDRAW: account does not conform to k-standard" }
 
           //send to this
-          const res = await transfer(tokenAddress, fromAcct, fromAcctPrivKey, toAcct, amount, chainId, {"pred":"keys-all","keys":[toAcct]})
+          const res = await transfer(tokenAddress, fromAcct, fromAcctPrivKey, toAcct, amount, chainId, {"pred":"keys-all","keys":[toAcctPubKey]})
           return res
         } else {
           //toAcct is totally invalid
           //EXIT function
-          return "CANNOT PROCESS WITHDRAW: new account not a public key"
+          return "CANNOT PROCESS WITHDRAW: account does not conform to k-standard"
         }
       }
     } catch (e) {
@@ -75,7 +79,7 @@ const processWithdraw = async (
 }
 
 //EXAMPLE FUNCTION CALL
-processWithdraw('coin', PUB_KEY, PRIV_KEY, '9be19442151c880492ec0fddc5bdbe9eccd243b8d723f4673b317f10b2e5d515', 0.51, "10");
+// processWithdraw('coin', K_ACCOUNT, PRIV_KEY, 'k:9be19442151c880492ec0fddc5bdbe9eccd243b8d723f4673b317f10b2e5d515', 0.51, "10");
 
 module.exports = {
   processWithdraw
