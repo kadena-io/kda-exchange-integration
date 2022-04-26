@@ -96,7 +96,18 @@ const transferCrossChainSameAccount = async (
           //  PLEASE KEEP SAFE
           publicKey: accountPubKey,
           secretKey: accountPrivKey,
-          clist: []
+          clist: [
+            //capability to transfer crosschain
+            {
+              name: `${tokenAddress}.TRANSFER_XCHAIN`,
+              args: [account, account, +formatAmount(amount), toChain]
+            },
+            //capability for gas
+            {
+              name: `coin.GAS`,
+              args: []
+            }
+          ]
         }],
         meta: Pact.lang.mkMeta(account, fromChain, GAS_PRICE, GAS_LIMIT, creationTime(), TTL),
         envData: {
